@@ -8,7 +8,8 @@ export declare class PlaywrightManager {
     connect(): Promise<void>;
     disconnect(): Promise<void>;
     getPage(): Page;
-    isConnected(): boolean;
+    isConnected(): Promise<boolean>;
+    private cleanup;
     ensureConnected(): Promise<void>;
 }
 //# sourceMappingURL=playwright.d.ts.map
