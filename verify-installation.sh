@@ -1,27 +1,25 @@
 #!/bin/bash
 
-echo "🚀 Verifying Playwright MCP Server Installation"
-echo "=============================================="
+echo "🚀 Verifying Playwright MCP Server"
+echo "=================================="
 
-# Check if globally installed
-echo "📦 Checking global installation..."
-if command -v playwright-mcp-server >/dev/null 2>&1; then
-    echo "✅ playwright-mcp-server globally installed"
-    playwright-mcp-server --help >/dev/null 2>&1 && echo "✅ Server starts successfully"
+# Check if npx can run the package
+echo "📦 Testing npx execution..."
+if npx https://github.com/b3nw/playwright-browserless-mcp.git --help >/dev/null 2>&1; then
+    echo "✅ Package runs successfully with npx"
 else
-    echo "⚠️  playwright-mcp-server not found globally"
-    echo "   Install with: npm install -g playwright-mcp-server"
-    echo "   Or run from source: npm run build && npm link"
+    echo "❌ Failed to run with npx"
+    echo "   Make sure you have Node.js and npm installed"
 fi
 
 echo ""
-echo "🎯 Simple integration commands:"
+echo "🎯 AI Assistant integration commands:"
 echo ""
 echo "Claude Code:"
-echo "claude mcp add playwright-server -s user -- playwright-mcp-server --url ws://your-browserless-host:3000/playwright/chromium"
+echo "claude mcp add playwright-server -s user -- npx https://github.com/b3nw/playwright-browserless-mcp.git --url ws://your-browserless-host:3000/playwright/chromium"
 echo ""
 echo "Cursor AI:"
-echo "cursor mcp add playwright-server -- playwright-mcp-server --url ws://your-browserless-host:3000/playwright/chromium"
+echo "cursor mcp add playwright-server -- npx https://github.com/b3nw/playwright-browserless-mcp.git --url ws://your-browserless-host:3000/playwright/chromium"
 echo ""
-echo "🎉 No complex paths or directories needed!"
-echo "   Just install globally and specify your browserless URL"
+echo "🎉 No installation required!"
+echo "   Just configure your AI assistant to use npx with your browserless URL"

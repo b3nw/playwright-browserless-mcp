@@ -14,22 +14,16 @@ A Model Context Protocol (MCP) server that provides web automation tools via a r
 
 ## Quick Start
 
-### 1. Install globally via npm
-
-```bash
-npm install -g playwright-mcp-server
-```
-
-### 2. Add to your AI assistant
+### 1. Add to your AI assistant (No installation required)
 
 **Claude Code:**
 ```bash
-claude mcp add playwright-server -s user -- playwright-mcp-server --url ws://your-browserless-host:3000/playwright/chromium
+claude mcp add playwright-server -s user -- npx https://github.com/b3nw/playwright-browserless-mcp.git --url ws://your-browserless-host:3000/playwright/chromium
 ```
 
 **Cursor AI:**
 ```bash
-cursor mcp add playwright-server -- playwright-mcp-server --url ws://your-browserless-host:3000/playwright/chromium
+cursor mcp add playwright-server -- npx https://github.com/b3nw/playwright-browserless-mcp.git --url ws://your-browserless-host:3000/playwright/chromium
 ```
 
 ### 3. Restart your AI assistant and test
@@ -40,20 +34,15 @@ cursor mcp add playwright-server -- playwright-mcp-server --url ws://your-browse
 
 ## Installation Options
 
-### Option 1: Global npm install (Recommended)
+### Option 1: Use with npx (Recommended - No installation required)
 ```bash
-npm install -g playwright-mcp-server
+npx https://github.com/b3nw/playwright-browserless-mcp.git --url ws://your-browserless-host:3000/playwright/chromium
 ```
 
-### Option 2: Use with npx (No installation)
+### Option 2: Build from source
 ```bash
-npx playwright-mcp-server --url ws://your-browserless-host:3000/playwright/chromium
-```
-
-### Option 3: Build from source
-```bash
-git clone <repository-url>
-cd playwright-mcp
+git clone https://github.com/b3nw/playwright-browserless-mcp.git
+cd playwright-browserless-mcp
 npm install && npm run build
 ```
 
@@ -71,13 +60,13 @@ npm install && npm run build
 
 ```bash
 # Basic usage
-playwright-mcp-server --url ws://localhost:3000/playwright/chromium
+npx https://github.com/b3nw/playwright-browserless-mcp.git --url ws://localhost:3000/playwright/chromium
 
 # With custom settings
-playwright-mcp-server --url ws://your-host:3000/playwright/chromium --timeout 60000 --width 1280 --height 720
+npx https://github.com/b3nw/playwright-browserless-mcp.git --url ws://your-host:3000/playwright/chromium --timeout 60000 --width 1280 --height 720
 
 # Using environment variable
-PLAYWRIGHT_URL=ws://your-host:3000/playwright/chromium playwright-mcp-server
+PLAYWRIGHT_URL=ws://your-host:3000/playwright/chromium npx https://github.com/b3nw/playwright-browserless-mcp.git
 ```
 
 ## Setting Up Browserless
@@ -103,7 +92,7 @@ Follow the [browserless documentation](https://docs.browserless.io) for self-hos
 
 **Method 1: CLI (Recommended)**
 ```bash
-claude mcp add playwright-server -s user -- playwright-mcp-server --url ws://your-browserless-host:3000/playwright/chromium
+claude mcp add playwright-server -s user -- npx https://github.com/b3nw/playwright-browserless-mcp.git --url ws://your-browserless-host:3000/playwright/chromium
 ```
 
 **Method 2: Manual config file**
@@ -113,8 +102,8 @@ Edit `~/.config/claude/claude_desktop_config.json`:
   "mcpServers": {
     "playwright-server": {
       "type": "stdio",
-      "command": "playwright-mcp-server",
-      "args": ["--url", "ws://your-browserless-host:3000/playwright/chromium"]
+      "command": "npx",
+      "args": ["https://github.com/b3nw/playwright-browserless-mcp.git", "--url", "ws://your-browserless-host:3000/playwright/chromium"]
     }
   }
 }
@@ -124,7 +113,7 @@ Edit `~/.config/claude/claude_desktop_config.json`:
 
 **Method 1: CLI**
 ```bash
-cursor mcp add playwright-server -- playwright-mcp-server --url ws://your-browserless-host:3000/playwright/chromium
+cursor mcp add playwright-server -- npx https://github.com/b3nw/playwright-browserless-mcp.git --url ws://your-browserless-host:3000/playwright/chromium
 ```
 
 **Method 2: Settings UI**
@@ -133,8 +122,8 @@ cursor mcp add playwright-server -- playwright-mcp-server --url ws://your-browse
 3. Click "Add MCP Server"
 4. Configure:
    - **Name**: `playwright-server`
-   - **Command**: `playwright-mcp-server`
-   - **Args**: `["--url", "ws://your-browserless-host:3000/playwright/chromium"]`
+   - **Command**: `npx`
+   - **Args**: `["https://github.com/b3nw/playwright-browserless-mcp.git", "--url", "ws://your-browserless-host:3000/playwright/chromium"]`
 
 ### VS Code with Claude Extension
 
@@ -144,8 +133,8 @@ Edit your Claude configuration to include:
   "mcpServers": {
     "playwright-server": {
       "type": "stdio", 
-      "command": "playwright-mcp-server",
-      "args": ["--url", "ws://your-browserless-host:3000/playwright/chromium"]
+      "command": "npx",
+      "args": ["https://github.com/b3nw/playwright-browserless-mcp.git", "--url", "ws://your-browserless-host:3000/playwright/chromium"]
     }
   }
 }
@@ -205,7 +194,7 @@ Click the submit button and wait for the success message
 
 ### Server not appearing in `/mcp`
 1. Restart your AI assistant completely
-2. Verify the server is installed: `playwright-mcp-server --help`
+2. Verify the server works: `npx https://github.com/b3nw/playwright-browserless-mcp.git --help`
 3. Check the configuration syntax in your config file
 
 ### Connection errors

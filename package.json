@@ -1,10 +1,10 @@
 {
-  "name": "playwright-mcp-server",
+  "name": "playwright-browserless-mcp",
   "version": "1.0.0",
   "description": "MCP server for remote Playwright/browserless automation",
   "main": "dist/index.js",
   "bin": {
-    "playwright-mcp-server": "dist/index.js"
+    "playwright-browserless-mcp": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",

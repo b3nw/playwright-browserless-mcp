@@ -1,0 +1,20 @@
+# Keep source for GitHub installs that need to build
+# src/
+# *.ts
+# !*.d.ts
+
+# Development files
+.vscode/
+nohup.out
+test-server.js
+
+# Build tools
+tsconfig.json
+
+# Documentation
+*.md
+!README.md
+
+# Logs and temp files
+*.log
+.DS_Store
