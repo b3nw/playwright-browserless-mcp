@@ -15,7 +15,7 @@ export class PlaywrightMcpServer {
     }
     setupTools() {
         // Navigate tool
-        this.server.registerTool('navigate', {
+        this.server.registerTool('browser_navigate', {
             title: 'Navigate to URL',
             description: 'Navigate to a specified URL and wait for page load',
             inputSchema: {
@@ -49,7 +49,7 @@ export class PlaywrightMcpServer {
             }
         });
         // Screenshot tool
-        this.server.registerTool('screenshot', {
+        this.server.registerTool('browser_take_screenshot', {
             title: 'Take Screenshot',
             description: 'Take a screenshot of the current page or a specific element',
             inputSchema: {
@@ -90,7 +90,7 @@ export class PlaywrightMcpServer {
             }
         });
         // Get HTML tool
-        this.server.registerTool('get_html', {
+        this.server.registerTool('browser_get_html', {
             title: 'Get HTML Content',
             description: 'Extract HTML content from the page or a specific element',
             inputSchema: {
@@ -129,7 +129,7 @@ export class PlaywrightMcpServer {
             }
         });
         // Click tool
-        this.server.registerTool('click', {
+        this.server.registerTool('browser_click', {
             title: 'Click Element',
             description: 'Click on an element specified by selector',
             inputSchema: {
@@ -161,7 +161,7 @@ export class PlaywrightMcpServer {
             }
         });
         // Type text tool
-        this.server.registerTool('type_text', {
+        this.server.registerTool('browser_type', {
             title: 'Type Text',
             description: 'Type text into an input field specified by selector',
             inputSchema: {
@@ -195,7 +195,7 @@ export class PlaywrightMcpServer {
             }
         });
         // Wait for element tool
-        this.server.registerTool('wait_for_element', {
+        this.server.registerTool('browser_wait_for', {
             title: 'Wait for Element',
             description: 'Wait for an element to appear on the page',
             inputSchema: {
@@ -229,7 +229,7 @@ export class PlaywrightMcpServer {
             }
         });
         // Evaluate JavaScript tool
-        this.server.registerTool('evaluate', {
+        this.server.registerTool('browser_evaluate', {
             title: 'Execute JavaScript',
             description: 'Execute JavaScript code in the browser context',
             inputSchema: {
@@ -270,6 +270,267 @@ export class PlaywrightMcpServer {
                     content: [{
                             type: 'text',
                             text: `Script evaluation failed: ${error instanceof Error ? error.message : String(error)}`
+                        }],
+                    isError: true
+                };
+            }
+        });
+        // Browser snapshot tool
+        this.server.registerTool('browser_snapshot', {
+            title: 'Get Accessibility Tree Snapshot',
+            description: 'Get accessibility tree snapshot for LLM-friendly element identification',
+            inputSchema: {
+                selector: z.string().optional()
+            }
+        }, async (params) => {
+            try {
+                const input = z.object({
+                    selector: z.string().optional()
+                }).parse(params);
+                await this.playwright.ensureConnected();
+                const page = this.playwright.getPage();
+                // Get the accessibility tree
+                let snapshot;
+                if (input.selector) {
+                    // Get accessibility snapshot for specific element
+                    const element = await page.locator(input.selector);
+                    snapshot = await element.locator('xpath=.').first().evaluate(async (el) => {
+                        // Use the browser's accessibility API to get semantic information
+                        const computedRole = el.getAttribute('role') || el.tagName.toLowerCase();
+                        const computedName = el.getAttribute('aria-label') ||
+                            el.getAttribute('aria-labelledby') ||
+                            el.getAttribute('title') ||
+                            el.innerText?.trim() ||
+                            el.getAttribute('alt') ||
+                            el.getAttribute('placeholder') || '';
+                        return {
+                            role: computedRole,
+                            name: computedName,
+                            value: el.value || el.getAttribute('aria-valuenow') || '',
+                            description: el.getAttribute('aria-describedby') || el.getAttribute('title') || '',
+                            disabled: el.hasAttribute('disabled') || el.getAttribute('aria-disabled') === 'true',
+                            expanded: el.getAttribute('aria-expanded') === 'true',
+                            focused: document.activeElement === el,
+                            selected: el.getAttribute('aria-selected') === 'true',
+                            checked: el.getAttribute('aria-checked') || el.checked,
+                            required: el.hasAttribute('required') || el.getAttribute('aria-required') === 'true',
+                            readonly: el.hasAttribute('readonly') || el.getAttribute('aria-readonly') === 'true',
+                            invalid: el.getAttribute('aria-invalid') || el.validity?.valid === false ? 'true' : undefined,
+                            multiline: el.getAttribute('aria-multiline') === 'true',
+                            autocomplete: el.getAttribute('autocomplete'),
+                            placeholder: el.getAttribute('placeholder'),
+                            tagName: el.tagName.toLowerCase(),
+                            id: el.id,
+                            className: el.className,
+                            text: el.innerText?.trim() || '',
+                            href: el.href,
+                            src: el.src
+                        };
+                    });
+                }
+                else {
+                    // Get accessibility snapshot for entire page
+                    snapshot = await page.evaluate(() => {
+                        function getAccessibilityInfo(element) {
+                            if (!element || element.nodeType !== Node.ELEMENT_NODE)
+                                return null;
+                            const el = element;
+                            const computedRole = el.getAttribute('role') || el.tagName.toLowerCase();
+                            const computedName = el.getAttribute('aria-label') ||
+                                el.getAttribute('aria-labelledby') ||
+                                el.getAttribute('title') ||
+                                el.innerText?.trim().substring(0, 100) ||
+                                el.getAttribute('alt') ||
+                                el.getAttribute('placeholder') || '';
+                            // Skip elements with no meaningful content unless they're interactive
+                            const interactiveRoles = ['button', 'link', 'input', 'select', 'textarea', 'checkbox', 'radio'];
+                            const isInteractive = interactiveRoles.includes(computedRole) ||
+                                el.hasAttribute('onclick') ||
+                                el.hasAttribute('href') ||
+                                el.tabIndex >= 0;
+                            if (!computedName && !isInteractive && !el.getAttribute('aria-label')) {
+                                return null;
+                            }
+                            const info = {
+                                role: computedRole,
+                                name: computedName,
+                                tagName: el.tagName.toLowerCase()
+                            };
+                            // Add important attributes
+                            if (el.id)
+                                info.id = el.id;
+                            if (el.className)
+                                info.className = el.className;
+                            if (el.value)
+                                info.value = el.value;
+                            if (el.getAttribute('aria-describedby'))
+                                info.description = el.getAttribute('aria-describedby');
+                            if (el.hasAttribute('disabled') || el.getAttribute('aria-disabled') === 'true')
+                                info.disabled = true;
+                            if (el.getAttribute('aria-expanded'))
+                                info.expanded = el.getAttribute('aria-expanded') === 'true';
+                            if (document.activeElement === el)
+                                info.focused = true;
+                            if (el.getAttribute('aria-selected'))
+                                info.selected = el.getAttribute('aria-selected') === 'true';
+                            if (el.getAttribute('aria-checked') || el.checked !== undefined) {
+                                info.checked = el.getAttribute('aria-checked') || el.checked;
+                            }
+                            if (el.hasAttribute('required') || el.getAttribute('aria-required') === 'true')
+                                info.required = true;
+                            if (el.hasAttribute('readonly') || el.getAttribute('aria-readonly') === 'true')
+                                info.readonly = true;
+                            if (el.href)
+                                info.href = el.href;
+                            if (el.getAttribute('placeholder'))
+                                info.placeholder = el.getAttribute('placeholder');
+                            // Generate a simple CSS selector for this element
+                            let selector = el.tagName.toLowerCase();
+                            if (el.id) {
+                                selector = `#${el.id}`;
+                            }
+                            else if (el.className) {
+                                const classes = el.className.trim().split(/\s+/).slice(0, 2).join('.');
+                                selector = `${selector}.${classes}`;
+                            }
+                            info.selector = selector;
+                            // Get children recursively, but limit depth to avoid huge trees
+                            const children = [];
+                            for (let child of Array.from(el.children).slice(0, 20)) { // Limit to first 20 children
+                                const childInfo = getAccessibilityInfo(child);
+                                if (childInfo) {
+                                    children.push(childInfo);
+                                }
+                            }
+                            if (children.length > 0) {
+                                info.children = children;
+                            }
+                            return info;
+                        }
+                        return getAccessibilityInfo(document.body);
+                    });
+                }
+                return {
+                    content: [{
+                            type: 'text',
+                            text: `Accessibility tree snapshot:\n${JSON.stringify(snapshot, null, 2)}`
+                        }]
+                };
+            }
+            catch (error) {
+                return {
+                    content: [{
+                            type: 'text',
+                            text: `Browser snapshot failed: ${error instanceof Error ? error.message : String(error)}`
+                        }],
+                    isError: true
+                };
+            }
+        });
+        // Browser file upload tool
+        this.server.registerTool('browser_file_upload', {
+            title: 'Upload Files to Input Element',
+            description: 'Upload files to file input elements on the page',
+            inputSchema: {
+                selector: z.string(),
+                paths: z.array(z.string()).min(1)
+            }
+        }, async (params) => {
+            try {
+                const input = z.object({
+                    selector: z.string(),
+                    paths: z.array(z.string()).min(1)
+                }).parse(params);
+                await this.playwright.ensureConnected();
+                const page = this.playwright.getPage();
+                // Validate that the element exists and is a file input
+                const element = page.locator(input.selector);
+                const elementType = await element.getAttribute('type');
+                if (elementType !== 'file') {
+                    throw new Error('Target element is not a file input (type="file")');
+                }
+                // Validate that files exist (for absolute paths)
+                const fs = await import('fs');
+                const path = await import('path');
+                const validatedPaths = [];
+                for (const filePath of input.paths) {
+                    try {
+                        // Convert relative paths to absolute paths
+                        const absolutePath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath);
+                        // Check if file exists
+                        if (!fs.existsSync(absolutePath)) {
+                            throw new Error(`File not found: ${filePath}`);
+                        }
+                        // Check if it's actually a file (not directory)
+                        const stats = fs.statSync(absolutePath);
+                        if (!stats.isFile()) {
+                            throw new Error(`Path is not a file: ${filePath}`);
+                        }
+                        validatedPaths.push(absolutePath);
+                    }
+                    catch (fileError) {
+                        throw new Error(`File validation failed for ${filePath}: ${fileError instanceof Error ? fileError.message : String(fileError)}`);
+                    }
+                }
+                // Upload the files
+                await element.setInputFiles(validatedPaths);
+                return {
+                    content: [{
+                            type: 'text',
+                            text: `Successfully uploaded ${validatedPaths.length} file(s) to element: ${input.selector}`
+                        }]
+                };
+            }
+            catch (error) {
+                return {
+                    content: [{
+                            type: 'text',
+                            text: `File upload failed: ${error instanceof Error ? error.message : String(error)}`
+                        }],
+                    isError: true
+                };
+            }
+        });
+        // Browser refresh tool
+        this.server.registerTool('browser_refresh', {
+            title: 'Refresh Current Page',
+            description: 'Refresh the current page, similar to pressing F5 or clicking browser refresh',
+            inputSchema: {
+                waitUntil: z.enum(['networkidle', 'domcontentloaded', 'load']).optional().default('load'),
+                timeout: z.number().optional()
+            }
+        }, async (params) => {
+            try {
+                const input = z.object({
+                    waitUntil: z.enum(['networkidle', 'domcontentloaded', 'load']).optional().default('load'),
+                    timeout: z.number().optional()
+                }).parse(params);
+                await this.playwright.ensureConnected();
+                const page = this.playwright.getPage();
+                // Get current URL before refresh
+                const currentUrl = page.url();
+                // Perform the refresh with specified options
+                const refreshOptions = {
+                    waitUntil: input.waitUntil
+                };
+                if (input.timeout !== undefined) {
+                    refreshOptions.timeout = input.timeout;
+                }
+                await page.reload(refreshOptions);
+                // Get URL after refresh (should be the same unless redirected)
+                const newUrl = page.url();
+                return {
+                    content: [{
+                            type: 'text',
+                            text: `Successfully refreshed page. URL: ${newUrl}${currentUrl !== newUrl ? ` (redirected from ${currentUrl})` : ''}`
+                        }]
+                };
+            }
+            catch (error) {
+                return {
+                    content: [{
+                            type: 'text',
+                            text: `Page refresh failed: ${error instanceof Error ? error.message : String(error)}`
                         }],
                     isError: true
                 };
