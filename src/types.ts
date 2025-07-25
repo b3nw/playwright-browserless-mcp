@@ -10,35 +10,35 @@ export interface PlaywrightConfig {
 }
 
 // Input schemas for MCP tools
-export const NavigateInputSchema = z.object({
+export const BrowserNavigateInputSchema = z.object({
   url: z.string().url(),
   waitUntil: z.enum(['networkidle', 'domcontentloaded', 'load']).optional().default('domcontentloaded')
 });
 
-export const ScreenshotInputSchema = z.object({
+export const BrowserTakeScreenshotInputSchema = z.object({
   fullPage: z.boolean().optional().default(false),
   selector: z.string().optional()
 });
 
-export const GetHtmlInputSchema = z.object({
+export const BrowserGetHtmlInputSchema = z.object({
   selector: z.string().optional()
 });
 
-export const ClickInputSchema = z.object({
+export const BrowserClickInputSchema = z.object({
   selector: z.string()
 });
 
-export const TypeTextInputSchema = z.object({
+export const BrowserTypeInputSchema = z.object({
   selector: z.string(),
   text: z.string()
 });
 
-export const WaitForElementInputSchema = z.object({
+export const BrowserWaitForInputSchema = z.object({
   selector: z.string(),
   timeout: z.number().optional().default(30000)
 });
 
-export const EvaluateInputSchema = z.object({
+export const BrowserEvaluateInputSchema = z.object({
   script: z.string()
 });
 
@@ -56,13 +56,13 @@ export const BrowserRefreshInputSchema = z.object({
   timeout: z.number().optional()
 });
 
-export type NavigateInput = z.infer<typeof NavigateInputSchema>;
-export type ScreenshotInput = z.infer<typeof ScreenshotInputSchema>;
-export type GetHtmlInput = z.infer<typeof GetHtmlInputSchema>;
-export type ClickInput = z.infer<typeof ClickInputSchema>;
-export type TypeTextInput = z.infer<typeof TypeTextInputSchema>;
-export type WaitForElementInput = z.infer<typeof WaitForElementInputSchema>;
-export type EvaluateInput = z.infer<typeof EvaluateInputSchema>;
+export type BrowserNavigateInput = z.infer<typeof BrowserNavigateInputSchema>;
+export type BrowserTakeScreenshotInput = z.infer<typeof BrowserTakeScreenshotInputSchema>;
+export type BrowserGetHtmlInput = z.infer<typeof BrowserGetHtmlInputSchema>;
+export type BrowserClickInput = z.infer<typeof BrowserClickInputSchema>;
+export type BrowserTypeInput = z.infer<typeof BrowserTypeInputSchema>;
+export type BrowserWaitForInput = z.infer<typeof BrowserWaitForInputSchema>;
+export type BrowserEvaluateInput = z.infer<typeof BrowserEvaluateInputSchema>;
 export type BrowserSnapshotInput = z.infer<typeof BrowserSnapshotInputSchema>;
 export type BrowserFileUploadInput = z.infer<typeof BrowserFileUploadInputSchema>;
 export type BrowserRefreshInput = z.infer<typeof BrowserRefreshInputSchema>;

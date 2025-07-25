@@ -30,40 +30,40 @@ playwright-mcp/
 
 ## MCP Tools to Implement
 
-### Core Tools (Already Implemented)
-1. `navigate`
+### Core Tools (Implemented - Microsoft Standard Names)
+1. `browser_navigate` (renamed from `navigate`)
    - **Purpose**: Navigate to a URL
    - **Inputs**: `url` (string), optional `waitUntil` (networkidle, domcontentloaded, load)
    - **Returns**: Success status and final URL
 
-2. `screenshot`
+2. `browser_take_screenshot` (renamed from `screenshot`)
    - **Purpose**: Take a screenshot of current page
    - **Inputs**: optional `fullPage` (boolean), `selector` (string)
    - **Returns**: Base64 encoded PNG data
    - **Defaults**: fullPage=false, viewport screenshot
 
-3. `get_html`
+3. `browser_get_html` (renamed from `get_html`)
    - **Purpose**: Extract HTML content
    - **Inputs**: optional `selector` (string for specific element)
    - **Returns**: HTML string
    - **Defaults**: Full page HTML
 
-4. `click`
+4. `browser_click` (renamed from `click`)
    - **Purpose**: Click an element
    - **Inputs**: `selector` (string)
    - **Returns**: Success status
 
-5. `type_text`
+5. `browser_type` (renamed from `type_text`)
    - **Purpose**: Type text into an input field
    - **Inputs**: `selector` (string), `text` (string)
    - **Returns**: Success status
 
-6. `wait_for_element`
+6. `browser_wait_for` (renamed from `wait_for_element`)
    - **Purpose**: Wait for element to appear
    - **Inputs**: `selector` (string), optional `timeout` (number, default 30000ms)
    - **Returns**: Success status
 
-7. `evaluate`
+7. `browser_evaluate` (renamed from `evaluate`)
    - **Purpose**: Execute JavaScript in browser context
    - **Inputs**: `script` (string)
    - **Returns**: Script execution result

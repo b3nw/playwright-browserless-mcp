@@ -21,7 +21,7 @@ export class PlaywrightMcpServer {
   private setupTools(): void {
     // Navigate tool
     this.server.registerTool(
-      'navigate',
+      'browser_navigate',
       {
         title: 'Navigate to URL',
         description: 'Navigate to a specified URL and wait for page load',
@@ -61,7 +61,7 @@ export class PlaywrightMcpServer {
 
     // Screenshot tool
     this.server.registerTool(
-      'screenshot',
+      'browser_take_screenshot',
       {
         title: 'Take Screenshot',
         description: 'Take a screenshot of the current page or a specific element',
@@ -108,7 +108,7 @@ export class PlaywrightMcpServer {
 
     // Get HTML tool
     this.server.registerTool(
-      'get_html',
+      'browser_get_html',
       {
         title: 'Get HTML Content',
         description: 'Extract HTML content from the page or a specific element',
@@ -153,7 +153,7 @@ export class PlaywrightMcpServer {
 
     // Click tool
     this.server.registerTool(
-      'click',
+      'browser_click',
       {
         title: 'Click Element',
         description: 'Click on an element specified by selector',
@@ -191,7 +191,7 @@ export class PlaywrightMcpServer {
 
     // Type text tool
     this.server.registerTool(
-      'type_text',
+      'browser_type',
       {
         title: 'Type Text',
         description: 'Type text into an input field specified by selector',
@@ -231,7 +231,7 @@ export class PlaywrightMcpServer {
 
     // Wait for element tool
     this.server.registerTool(
-      'wait_for_element',
+      'browser_wait_for',
       {
         title: 'Wait for Element',
         description: 'Wait for an element to appear on the page',
@@ -271,7 +271,7 @@ export class PlaywrightMcpServer {
 
     // Evaluate JavaScript tool
     this.server.registerTool(
-      'evaluate',
+      'browser_evaluate',
       {
         title: 'Execute JavaScript',
         description: 'Execute JavaScript code in the browser context',
