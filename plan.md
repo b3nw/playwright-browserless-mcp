@@ -77,11 +77,12 @@ playwright-mcp/
    - **Why needed**: Replaces fragile CSS selectors with semantic descriptions
    - **Status**: Fully implemented and tested. Provides detailed accessibility tree information including roles, names, states, and CSS selectors for better element identification.
 
-9. `browser_file_upload`
+9. `browser_file_upload` ✅ **IMPLEMENTED**
    - **Purpose**: Upload files to file input elements
    - **Inputs**: `selector` (string), `paths` (array of file paths)
-   - **Returns**: Success status
+   - **Returns**: Success status and file count
    - **Why needed**: Critical for testing file upload functionality - completely missing
+   - **Status**: Fully implemented with comprehensive file validation, absolute/relative path support, and proper error handling.
 
 10. `browser_handle_dialog`
     - **Purpose**: Handle JavaScript dialogs (alerts, confirms, prompts)

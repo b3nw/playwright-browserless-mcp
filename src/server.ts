@@ -477,6 +477,83 @@ export class PlaywrightMcpServer {
         }
       }
     );
+
+    // Browser file upload tool
+    this.server.registerTool(
+      'browser_file_upload',
+      {
+        title: 'Upload Files to Input Element',
+        description: 'Upload files to file input elements on the page',
+        inputSchema: {
+          selector: z.string(),
+          paths: z.array(z.string()).min(1)
+        }
+      },
+      async (params: any) => {
+        try {
+          const input = z.object({
+            selector: z.string(),
+            paths: z.array(z.string()).min(1)
+          }).parse(params);
+          await this.playwright.ensureConnected();
+          
+          const page = this.playwright.getPage();
+          
+          // Validate that the element exists and is a file input
+          const element = page.locator(input.selector);
+          const elementType = await element.getAttribute('type');
+          
+          if (elementType !== 'file') {
+            throw new Error('Target element is not a file input (type="file")');
+          }
+          
+          // Validate that files exist (for absolute paths)
+          const fs = await import('fs');
+          const path = await import('path');
+          
+          const validatedPaths = [];
+          for (const filePath of input.paths) {
+            try {
+              // Convert relative paths to absolute paths
+              const absolutePath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath);
+              
+              // Check if file exists
+              if (!fs.existsSync(absolutePath)) {
+                throw new Error(`File not found: ${filePath}`);
+              }
+              
+              // Check if it's actually a file (not directory)
+              const stats = fs.statSync(absolutePath);
+              if (!stats.isFile()) {
+                throw new Error(`Path is not a file: ${filePath}`);
+              }
+              
+              validatedPaths.push(absolutePath);
+            } catch (fileError) {
+              throw new Error(`File validation failed for ${filePath}: ${fileError instanceof Error ? fileError.message : String(fileError)}`);
+            }
+          }
+          
+          // Upload the files
+          await element.setInputFiles(validatedPaths);
+          
+          return {
+            content: [{
+              type: 'text',
+              text: `Successfully uploaded ${validatedPaths.length} file(s) to element: ${input.selector}`
+            }]
+          };
+        } catch (error) {
+          return {
+            content: [{
+              type: 'text',
+              text: `File upload failed: ${error instanceof Error ? error.message : String(error)}`
+            }],
+            isError: true
+          };
+        }
+      }
+    );
   }
 
   async start(): Promise<void> {

@@ -46,6 +46,11 @@ export const BrowserSnapshotInputSchema = z.object({
   selector: z.string().optional()
 });
 
+export const BrowserFileUploadInputSchema = z.object({
+  selector: z.string(),
+  paths: z.array(z.string()).min(1)
+});
+
 export type NavigateInput = z.infer<typeof NavigateInputSchema>;
 export type ScreenshotInput = z.infer<typeof ScreenshotInputSchema>;
 export type GetHtmlInput = z.infer<typeof GetHtmlInputSchema>;
@@ -54,6 +59,7 @@ export type TypeTextInput = z.infer<typeof TypeTextInputSchema>;
 export type WaitForElementInput = z.infer<typeof WaitForElementInputSchema>;
 export type EvaluateInput = z.infer<typeof EvaluateInputSchema>;
 export type BrowserSnapshotInput = z.infer<typeof BrowserSnapshotInputSchema>;
+export type BrowserFileUploadInput = z.infer<typeof BrowserFileUploadInputSchema>;
 
 export interface AccessibilityNode {
   role: string;
