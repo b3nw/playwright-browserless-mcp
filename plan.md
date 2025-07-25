@@ -102,11 +102,12 @@ playwright-mcp/
     - **Returns**: Success status and new URL
     - **Why needed**: Complete browser navigation testing
 
-13. `browser_refresh`
+13. `browser_refresh` ✅ **IMPLEMENTED**
     - **Purpose**: Refresh the current page
-    - **Inputs**: None
-    - **Returns**: Success status
+    - **Inputs**: optional `waitUntil` (string), optional `timeout` (number)
+    - **Returns**: Success status and current URL
     - **Why needed**: Test page refresh behavior, form resubmission scenarios
+    - **Status**: Fully implemented with configurable wait conditions and timeout support. Handles redirects and provides URL feedback.
 
 ### Medium Priority Missing Tools
 

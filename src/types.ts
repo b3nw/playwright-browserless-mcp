@@ -51,6 +51,11 @@ export const BrowserFileUploadInputSchema = z.object({
   paths: z.array(z.string()).min(1)
 });
 
+export const BrowserRefreshInputSchema = z.object({
+  waitUntil: z.enum(['networkidle', 'domcontentloaded', 'load']).optional().default('load'),
+  timeout: z.number().optional()
+});
+
 export type NavigateInput = z.infer<typeof NavigateInputSchema>;
 export type ScreenshotInput = z.infer<typeof ScreenshotInputSchema>;
 export type GetHtmlInput = z.infer<typeof GetHtmlInputSchema>;
@@ -60,6 +65,7 @@ export type WaitForElementInput = z.infer<typeof WaitForElementInputSchema>;
 export type EvaluateInput = z.infer<typeof EvaluateInputSchema>;
 export type BrowserSnapshotInput = z.infer<typeof BrowserSnapshotInputSchema>;
 export type BrowserFileUploadInput = z.infer<typeof BrowserFileUploadInputSchema>;
+export type BrowserRefreshInput = z.infer<typeof BrowserRefreshInputSchema>;
 
 export interface AccessibilityNode {
   role: string;

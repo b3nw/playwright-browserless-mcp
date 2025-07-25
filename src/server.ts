@@ -554,6 +554,62 @@ export class PlaywrightMcpServer {
         }
       }
     );
+
+    // Browser refresh tool
+    this.server.registerTool(
+      'browser_refresh',
+      {
+        title: 'Refresh Current Page',
+        description: 'Refresh the current page, similar to pressing F5 or clicking browser refresh',
+        inputSchema: {
+          waitUntil: z.enum(['networkidle', 'domcontentloaded', 'load']).optional().default('load'),
+          timeout: z.number().optional()
+        }
+      },
+      async (params: any) => {
+        try {
+          const input = z.object({
+            waitUntil: z.enum(['networkidle', 'domcontentloaded', 'load']).optional().default('load'),
+            timeout: z.number().optional()
+          }).parse(params);
+          await this.playwright.ensureConnected();
+          
+          const page = this.playwright.getPage();
+          
+          // Get current URL before refresh
+          const currentUrl = page.url();
+          
+          // Perform the refresh with specified options
+          const refreshOptions: any = {
+            waitUntil: input.waitUntil
+          };
+          
+          if (input.timeout !== undefined) {
+            refreshOptions.timeout = input.timeout;
+          }
+          
+          await page.reload(refreshOptions);
+          
+          // Get URL after refresh (should be the same unless redirected)
+          const newUrl = page.url();
+          
+          return {
+            content: [{
+              type: 'text',
+              text: `Successfully refreshed page. URL: ${newUrl}${currentUrl !== newUrl ? ` (redirected from ${currentUrl})` : ''}`
+            }]
+          };
+        } catch (error) {
+          return {
+            content: [{
+              type: 'text',
+              text: `Page refresh failed: ${error instanceof Error ? error.message : String(error)}`
+            }],
+            isError: true
+          };
+        }
+      }
+    );
   }
 
   async start(): Promise<void> {
