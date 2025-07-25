@@ -323,6 +323,160 @@ export class PlaywrightMcpServer {
         }
       }
     );
+
+    // Browser snapshot tool
+    this.server.registerTool(
+      'browser_snapshot',
+      {
+        title: 'Get Accessibility Tree Snapshot',
+        description: 'Get accessibility tree snapshot for LLM-friendly element identification',
+        inputSchema: {
+          selector: z.string().optional()
+        }
+      },
+      async (params: any) => {
+        try {
+          const input = z.object({
+            selector: z.string().optional()
+          }).parse(params);
+          await this.playwright.ensureConnected();
+          
+          const page = this.playwright.getPage();
+          
+          // Get the accessibility tree
+          let snapshot;
+          if (input.selector) {
+            // Get accessibility snapshot for specific element
+            const element = await page.locator(input.selector);
+            snapshot = await element.locator('xpath=.').first().evaluate(async (el) => {
+              // Use the browser's accessibility API to get semantic information
+              const computedRole = el.getAttribute('role') || el.tagName.toLowerCase();
+              const computedName = el.getAttribute('aria-label') || 
+                                 el.getAttribute('aria-labelledby') || 
+                                 el.getAttribute('title') || 
+                                 (el as any).innerText?.trim() || 
+                                 el.getAttribute('alt') || 
+                                 el.getAttribute('placeholder') || '';
+              
+              return {
+                role: computedRole,
+                name: computedName,
+                value: (el as any).value || el.getAttribute('aria-valuenow') || '',
+                description: el.getAttribute('aria-describedby') || el.getAttribute('title') || '',
+                disabled: el.hasAttribute('disabled') || el.getAttribute('aria-disabled') === 'true',
+                expanded: el.getAttribute('aria-expanded') === 'true',
+                focused: document.activeElement === el,
+                selected: el.getAttribute('aria-selected') === 'true',
+                checked: el.getAttribute('aria-checked') || (el as any).checked,
+                required: el.hasAttribute('required') || el.getAttribute('aria-required') === 'true',
+                readonly: el.hasAttribute('readonly') || el.getAttribute('aria-readonly') === 'true',
+                invalid: el.getAttribute('aria-invalid') || (el as any).validity?.valid === false ? 'true' : undefined,
+                multiline: el.getAttribute('aria-multiline') === 'true',
+                autocomplete: el.getAttribute('autocomplete'),
+                placeholder: el.getAttribute('placeholder'),
+                tagName: el.tagName.toLowerCase(),
+                id: el.id,
+                className: el.className,
+                text: (el as any).innerText?.trim() || '',
+                href: (el as any).href,
+                src: (el as any).src
+              };
+            });
+          } else {
+            // Get accessibility snapshot for entire page
+            snapshot = await page.evaluate(() => {
+              function getAccessibilityInfo(element: Element): any {
+                if (!element || element.nodeType !== Node.ELEMENT_NODE) return null;
+                
+                const el = element as HTMLElement;
+                const computedRole = el.getAttribute('role') || el.tagName.toLowerCase();
+                const computedName = el.getAttribute('aria-label') || 
+                                   el.getAttribute('aria-labelledby') || 
+                                   el.getAttribute('title') || 
+                                   el.innerText?.trim().substring(0, 100) || 
+                                   el.getAttribute('alt') || 
+                                   el.getAttribute('placeholder') || '';
+                
+                // Skip elements with no meaningful content unless they're interactive
+                const interactiveRoles = ['button', 'link', 'input', 'select', 'textarea', 'checkbox', 'radio'];
+                const isInteractive = interactiveRoles.includes(computedRole) || 
+                                    el.hasAttribute('onclick') || 
+                                    el.hasAttribute('href') || 
+                                    el.tabIndex >= 0;
+                
+                if (!computedName && !isInteractive && !el.getAttribute('aria-label')) {
+                  return null;
+                }
+                
+                const info: any = {
+                  role: computedRole,
+                  name: computedName,
+                  tagName: el.tagName.toLowerCase()
+                };
+                
+                // Add important attributes
+                if (el.id) info.id = el.id;
+                if (el.className) info.className = el.className;
+                if ((el as any).value) info.value = (el as any).value;
+                if (el.getAttribute('aria-describedby')) info.description = el.getAttribute('aria-describedby');
+                if (el.hasAttribute('disabled') || el.getAttribute('aria-disabled') === 'true') info.disabled = true;
+                if (el.getAttribute('aria-expanded')) info.expanded = el.getAttribute('aria-expanded') === 'true';
+                if (document.activeElement === el) info.focused = true;
+                if (el.getAttribute('aria-selected')) info.selected = el.getAttribute('aria-selected') === 'true';
+                if (el.getAttribute('aria-checked') || (el as any).checked !== undefined) {
+                  info.checked = el.getAttribute('aria-checked') || (el as any).checked;
+                }
+                if (el.hasAttribute('required') || el.getAttribute('aria-required') === 'true') info.required = true;
+                if (el.hasAttribute('readonly') || el.getAttribute('aria-readonly') === 'true') info.readonly = true;
+                if ((el as any).href) info.href = (el as any).href;
+                if (el.getAttribute('placeholder')) info.placeholder = el.getAttribute('placeholder');
+                
+                // Generate a simple CSS selector for this element
+                let selector = el.tagName.toLowerCase();
+                if (el.id) {
+                  selector = `#${el.id}`;
+                } else if (el.className) {
+                  const classes = el.className.trim().split(/\s+/).slice(0, 2).join('.');
+                  selector = `${selector}.${classes}`;
+                }
+                info.selector = selector;
+                
+                // Get children recursively, but limit depth to avoid huge trees
+                const children: any[] = [];
+                for (let child of Array.from(el.children).slice(0, 20)) { // Limit to first 20 children
+                  const childInfo = getAccessibilityInfo(child);
+                  if (childInfo) {
+                    children.push(childInfo);
+                  }
+                }
+                if (children.length > 0) {
+                  info.children = children;
+                }
+                
+                return info;
+              }
+              
+              return getAccessibilityInfo(document.body);
+            });
+          }
+          
+          return {
+            content: [{
+              type: 'text',
+              text: `Accessibility tree snapshot:\n${JSON.stringify(snapshot, null, 2)}`
+            }]
+          };
+        } catch (error) {
+          return {
+            content: [{
+              type: 'text',
+              text: `Browser snapshot failed: ${error instanceof Error ? error.message : String(error)}`
+            }],
+            isError: true
+          };
+        }
+      }
+    );
   }
 
   async start(): Promise<void> {
